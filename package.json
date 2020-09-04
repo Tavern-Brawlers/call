@@ -1,0 +1,72 @@
+{
+  "name": "discord-deck",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Deck Bot",
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tavern-Brawlers/deck.git"
+  },
+  "author": "",
+  "homepage": "https://github.com/Tavern-Brawlers/deck",
+  "bugs": {
+    "url": "https://github.com/Tavern-Brawlers/deck/issues"
+  },
+  "license": "ISC",
+  "main": "src/app.ts",
+  "scripts": {
+    "prod": "npm run build && npm run start",
+    "start": "cross-env NODE_ENV=production node --require dotenv/config dist/app.js",
+    "build": "npm run clean && tsc && npm run lint:fix",
+    "dev": "ts-node-dev --respawn --no-notify --require dotenv/config src/app.ts",
+    "clean": "rimraf dist",
+    "lint": "eslint --ext .ts .",
+    "lint:fix": "eslint --fix --ext .ts .",
+    "test": "jest --coverage --verbose",
+    "test:watch": "jest --coverage --verbose --watchAll"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "chalk": "^4.1.0",
+    "discord.js": "^11.6.4",
+    "dotenv": "^8.2.0",
+    "minimist": "^1.2.5",
+    "pg": "^8.3.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^8.3.5",
+    "@commitlint/config-conventional": "^8.3.4",
+    "@types/dotenv": "^6.1.1",
+    "@types/jest": "^24.9.1",
+    "@types/minimist": "^1.2.0",
+    "@types/node": "^12.12.54",
+    "@types/nodemailer": "^6.4.0",
+    "@types/pg": "^7.14.4",
+    "@typescript-eslint/eslint-plugin": "^1.13.0",
+    "@typescript-eslint/parser": "^1.13.0",
+    "cross-env": "^5.2.1",
+    "eslint": "^5.3.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-import-resolver-typescript": "^2.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jest": "^22.21.0",
+    "jest": "^24.9.0",
+    "lint-staged": "^9.5.0",
+    "rimraf": "^2.7.1",
+    "ts-jest": "^24.3.0",
+    "ts-node": "^8.10.2",
+    "ts-node-dev": "^1.0.0-pre.56",
+    "typescript": "^3.9.7"
+  },
+  "lint-staged": {
+    "*.(ts|js)": [
+      "npm run lint:fix",
+      "git add ."
+    ]
+  },
+  "engines": {
+    "node": ">= 12.9.1",
+    "npm": ">= 6.9.0"
+  }
+}
