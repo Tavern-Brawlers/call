@@ -1,4 +1,5 @@
 import { Message, RichEmbed, MessageAttachment } from 'discord.js';
+import axios from 'axios';
 
 import { Bot } from '../core/BotInterface';
 import { ParsedMessage } from '../core/BotCommandParser';
@@ -9,17 +10,27 @@ const fs = require('fs');
 
 const { Pool } = require('pg');
 
+export interface Character {
+  profile: {
+    name: string;
+  };
+  total_points: number;
+  modified_date: string;
+}
+
 const update = async (cmd: ParsedMessage, msg: Message, bot: Bot): Promise<void> => {
-  const args = cmd.arguments
-    .filter(str => /\S/.test(str))
-    .map(arg => arg.charAt(0).toUpperCase() + arg.slice(1))
-    .join(' ');
+  const args = cmd.arguments.join(' ');
 
-  const embed = new RichEmbed().setColor('#E64A19').setDescription(`Обновляю персонажа **${args}**`);
+  const response = await axios.get(msg.attachments.array()[0].url);
 
-  msg.channel.sendEmbed(embed);
+  const sheet = response.data as Character;
 
-  console.log(msg.attachments);
+  const pool = new Pool();
+
+  pool.query(`UPDATE character SET sheet=$DEDUHAN$${JSON.stringify(sheet)}$DEDUHAN$ WHERE character.uid='${args}'`).then(() => {
+    const embed = new RichEmbed().setColor(`#`).setDescription(`Обновлен персонаж **${sheet.profile.name}**`);
+    msg.channel.sendEmbed(embed);
+  });
 };
 
 export default update;

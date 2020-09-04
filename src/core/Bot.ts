@@ -9,11 +9,7 @@ import BotConsoleReader from './BotConsoleReader';
 import BotCommandMap from './BotCommandMap';
 import { ParsedMessage, parse } from './BotCommandParser';
 
-
-import draw from '../api/draw';
-import inventory from '../api/inventory';
-import use from '../api/use';
-import info from '../api/info';
+import get from '../api/get';
 import update from '../api/update';
 
 class YBot implements Bot {
@@ -42,7 +38,7 @@ class YBot implements Bot {
     this.commands = new BotCommandMap()
       // .on('draw', draw)
           // .on('update', update)
-      .on('info', info)
+      .on('get', get)
       .on('update', update);
 
     this.client = new Client()
