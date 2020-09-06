@@ -31,7 +31,7 @@ export interface ParsedMessage<MT = any> {
    * The prefix that the message started with, this is
    * redundant to the prefix that was provided to `parse()`.
    */
-  prefix: string;
+  prefix: string | undefined;
 
   /**
    * The command (first word or "quoted block") immediately
@@ -146,7 +146,7 @@ function getArguments(str: string): string[] {
 
 export function parse<MT>(
   message: Message,
-  prefix: string | string[],
+  prefix: string | string[] | undefined,
   options: ParserOptions = {},
 ): ParsedMessage<MT> {
   function fail(error: string, code: ResultCode): any {
@@ -161,62 +161,78 @@ export function parse<MT>(
     return result;
   }
 
-  let symbol = prefix;
+  if (prefix !== undefined) {
+    let symbol = prefix;
+    if (typeof prefix === 'string') symbol = [prefix];
+    else symbol = [...prefix];
 
-  if (typeof prefix === 'string') symbol = [prefix];
-  else symbol = [...prefix];
-
-  if (message.author.bot && !options.allowBots) {
-    return fail('Message sent by a bot account.', ResultCode.BOT_USER);
-  }
-
-  if (message.author.id === message.client.user.id && !options.allowSelf) {
-    return fail("Message sent from client's account.", ResultCode.SELF_MESSAGE);
-  }
-
-  if (message.content.length === 0) {
-    return fail('Empty message body.', ResultCode.NO_BODY);
-  }
-
-  let matchedPrefix = '';
-
-  // eslint-disable-next-line
-  for (const p of symbol) {
-    if (message.content.startsWith(p)) {
-      matchedPrefix = p;
-      break;
+    if (message.author.bot && !options.allowBots) {
+      return fail('Message sent by a bot account.', ResultCode.BOT_USER);
     }
+
+    if (message.author.id === message.client.user.id && !options.allowSelf) {
+      return fail("Message sent from client's account.", ResultCode.SELF_MESSAGE);
+    }
+
+    if (message.content.length === 0) {
+      return fail('Empty message body.', ResultCode.NO_BODY);
+    }
+
+    let matchedPrefix = '';
+    // eslint-disable-next-line
+    for (const p of symbol) {
+      if (message.content.startsWith(p)) {
+        matchedPrefix = p;
+        break;
+      }
+    }
+
+    if (!matchedPrefix) {
+      return fail('Message does not start with prefix.', ResultCode.NO_PREFIX_MATCH);
+    }
+    const remaining = message.content.slice(matchedPrefix.length);
+
+    if (remaining.length === 0) {
+      return fail('No body after prefix.', ResultCode.NO_BODY);
+    }
+  
+    if (!/[a-z0-9]/i.test(remaining[0])) {
+      return fail('Non alphanumeric character follows prefix.', ResultCode.NO_APLHANUMERIC_AFTER_PREFIX);
+    }
+
+    const matched = remaining.match(/^[a-z0-9\-_.]+/i);
+
+    if (!matched) {
+      return fail('No matched', ResultCode.UNKNOWN_ERROR);
+    }
+  
+    const parsed: ParsedMessage = {
+      success: true,
+      code: ResultCode.OK,
+      command: matched[0],
+      prefix: matchedPrefix,
+      arguments: getArguments(remaining),
+      body: remaining.slice(matched[0].length).trim(),
+      message,
+    };
+
+    return parsed;
+  } else {
+    console.log('parsed mention')
+    const sliced = message.content.split(' ').splice(1).filter((arg) => arg.trim() != '');
+    console.log(sliced);
+      const parsed: ParsedMessage = {
+      success: true,
+      code: ResultCode.OK,
+      command: sliced[0],
+      prefix: undefined,
+      arguments: sliced.splice(1),
+      body: '',
+      message,
+    };
+
+    return parsed;
   }
-
-  if (!matchedPrefix) {
-    return fail('Message does not start with prefix.', ResultCode.NO_PREFIX_MATCH);
-  }
-
-  const remaining = message.content.slice(matchedPrefix.length);
-
-  if (remaining.length === 0) {
-    return fail('No body after prefix.', ResultCode.NO_BODY);
-  }
-
-  if (!/[a-z0-9]/i.test(remaining[0])) {
-    return fail('Non alphanumeric character follows prefix.', ResultCode.NO_APLHANUMERIC_AFTER_PREFIX);
-  }
-
-  const matched = remaining.match(/^[a-z0-9\-_.]+/i);
-
-  if (!matched) {
-    return fail('No matched', ResultCode.UNKNOWN_ERROR);
-  }
-
-  const parsed: ParsedMessage = {
-    success: true,
-    code: ResultCode.OK,
-    command: matched[0],
-    prefix: matchedPrefix,
-    arguments: getArguments(remaining),
-    body: remaining.slice(matched[0].length).trim(),
-    message,
-  };
-
-  return parsed;
+  
+  
 }

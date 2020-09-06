@@ -74,7 +74,7 @@ const campaign = async (cmd: ParsedMessage, msg: Message, bot: Bot): Promise<voi
         if (campaigns.length > 0) {
           let list = campaigns
             .map((el, index) => {
-              return `**${el.name}** ${el.uid}`;
+              return `**${el.name}**`;
             })
             .join('\n');
 

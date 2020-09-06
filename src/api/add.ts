@@ -19,27 +19,85 @@ export interface Character {
 }
 
 const add = async (cmd: ParsedMessage, msg: Message, bot: Bot): Promise<void> => {
-  const code = cmd.arguments.join('');
-
-  const response = await axios.get(msg.attachments.array()[0].url);
-
-  const sheet = response.data as Character;
+  const code = cmd.arguments.join(' ');
 
   const pool = new Pool();
 
-  if (sheet) {
-    pool
-      .query(
-        `INSERT INTO character (sheet, discord, name) VALUES ($DEDUHAN$${JSON.stringify(sheet)}$DEDUHAN$, '${msg.author.id}', '${sheet.profile.name}')`,
-      )
-      .then(() => {
-        const embed = new RichEmbed().setColor(`#`).setDescription(`Создан персонаж **${sheet.profile.name}**`);
-        msg.channel.sendEmbed(embed);
-      });
-  } else {
-    const embed = new RichEmbed().setColor('#E64A19').setDescription(`Прикрепи лист персонажа в формате **.gcs**.`);
+  if (code.replace(/\s/g, '')) {
+    pool.query(`SELECT name,uid FROM campaign WHERE name='${code}'`, async (err: any, res: any) => {
+      if (!err) {
+        const campaigns: { name: string; uid: string }[] = res.rows;
 
-    msg.channel.sendEmbed(embed);
+        if (campaigns.length > 0) {
+          const campaign = campaigns[0];
+          if (msg.attachments.array()[0].url) {
+            const response = await axios.get(msg.attachments.array()[0].url);
+
+            const sheet = response.data as Character;
+            if (sheet) {
+              pool
+                .query(
+                  `INSERT INTO character (sheet, discord, name, campaign) VALUES ($DEDUHAN$${JSON.stringify(
+                    sheet,
+                  )}$DEDUHAN$, '${msg.author.id}', '${sheet.profile.name}', '${campaign.uid}')`,
+                )
+                .then(() => {
+                  const embed = new RichEmbed()
+                    .setColor(`#9CCC65`)
+                    .setDescription(`Добавлен новый персонаж **${sheet.profile.name}** в кампанию **${campaign.name}**`);
+                  msg.channel.sendEmbed(embed);
+                });
+            } else {
+              const embed = new RichEmbed()
+                .setColor('#E64A19')
+                .setDescription(`Прикрепи лист персонажа в формате **.gcs**.`);
+
+              msg.channel.sendEmbed(embed);
+            }
+          } else {
+            const embed = new RichEmbed()
+              .setColor('#E64A19')
+              .setDescription(`Прикрепи лист персонажа в формате **.gcs**.`);
+
+            msg.channel.sendEmbed(embed);
+          }
+        } else {
+          const embed = new RichEmbed()
+            .setColor('#E64A19')
+            .setDescription(`Кампании с именем **${code}** не существует.`);
+
+          msg.channel.sendEmbed(embed);
+        }
+      } else {
+        msg.channel.send(err);
+      }
+    });
+  } else {
+    pool.query(`SELECT * FROM campaign`, (err: any, res: any) => {
+      if (!err) {
+        const campaigns: { name: string; uid: string }[] = res.rows;
+
+        if (campaigns.length > 0) {
+          let list = campaigns
+            .map((el, index) => {
+              return `${el.name}`;
+            })
+            .join('\n');
+
+          const embed = new RichEmbed()
+            .setColor(`#00796B`)
+            .setDescription(`Укажи название кампании, в которую хочешь добавить персонажа:\n${list}`);
+
+          msg.channel.sendEmbed(embed);
+        } else {
+          const embed = new RichEmbed().setColor('#E64A19').setDescription(`Ошибка в таблице **campaign**.`);
+
+          msg.channel.sendEmbed(embed);
+        }
+      } else {
+        msg.channel.send(err);
+      }
+    });
   }
 };
 

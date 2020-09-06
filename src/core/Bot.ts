@@ -41,7 +41,7 @@ class YBot implements Bot {
 
     this.commands = new BotCommandMap()
       // .on('draw', draw)
-          // .on('update', update)
+      // .on('update', update)
       .on('get', get)
       .on('update', update)
       .on('list', list)
@@ -51,16 +51,17 @@ class YBot implements Bot {
 
     this.client = new Client()
       .on('message', (msg: Message): void => {
-        const parsed: ParsedMessage<Message> = parse(msg, this.config.command.symbol);
+        if (msg.isMemberMentioned(this.client.user)) {
+          const parsed: ParsedMessage<Message> = parse(msg, undefined);
+          if (!parsed.success) return;
 
-        if (!parsed.success) return;
+          const handlers = this.commands.get(parsed.command);
 
-        const handlers = this.commands.get(parsed.command);
-
-        if (handlers) {
-          handlers.forEach((handle): void => {
-            handle(parsed, msg, this);
-          });
+          if (handlers) {
+            handlers.forEach((handle): void => {
+              handle(parsed, msg, this);
+            });
+          }
         }
       })
       .on('ready', (): void => {
@@ -69,14 +70,11 @@ class YBot implements Bot {
         this.status.setActivity('online');
         this.status.setBanner('создание персонажей');
       })
-      .on('reconnecting', (): void => {
-      })
+      .on('reconnecting', (): void => {})
       .on('disconnect', (): void => {
         this.online = false;
-
       })
-      .on('error', (error: Error): void => {
-      })
+      .on('error', (error: Error): void => {})
       .on('guildMemberUpdate', (): void => {})
       .on('guildMemberSpeaking', (): void => {});
 
