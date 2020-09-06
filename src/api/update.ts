@@ -19,7 +19,7 @@ export interface Character {
 }
 
 const update = async (cmd: ParsedMessage, msg: Message, bot: Bot): Promise<void> => {
-  const args = cmd.arguments.join(' ');
+  const code = cmd.arguments.join('');
 
   const response = await axios.get(msg.attachments.array()[0].url);
 
@@ -27,10 +27,42 @@ const update = async (cmd: ParsedMessage, msg: Message, bot: Bot): Promise<void>
 
   const pool = new Pool();
 
-  pool.query(`UPDATE character SET sheet=$DEDUHAN$${JSON.stringify(sheet)}$DEDUHAN$ WHERE character.uid='${args}'`).then(() => {
-    const embed = new RichEmbed().setColor(`#`).setDescription(`Обновлен персонаж **${sheet.profile.name}**`);
+  if (code) {
+    pool.query(`SELECT * FROM character WHERE character.uid='${code}'`, (err: any, res: any) => {
+      if (!err) {
+        const characters: { sheet: Character , discord: string}[] = res.rows;
+
+        if (characters.length > 0) {
+          const character = characters[0];
+
+          if( character.discord === `${msg.author.id}`){
+            pool
+            .query(`UPDATE character SET sheet=$DEDUHAN$${JSON.stringify(sheet)}$DEDUHAN$ WHERE character.uid='${code}'`)
+            .then(() => {
+              const embed = new RichEmbed().setColor(`#`).setDescription(`Обновлен персонаж **${sheet.profile.name}**`);
+              msg.channel.sendEmbed(embed);
+            });
+          } else {
+            const embed = new RichEmbed().setColor('#E64A19').setDescription(`Ты не владеешь этим персонажем.`);
+
+            msg.channel.sendEmbed(embed);
+          }
+        } else {
+          const embed = new RichEmbed()
+            .setColor('#E64A19')
+            .setDescription(`Персонажа с кодом **${code}** не существует.`);
+
+          msg.channel.sendEmbed(embed);
+        }
+      } else {
+        msg.channel.send(err);
+      }
+    });
+  } else {
+    const embed = new RichEmbed().setColor('#E64A19').setDescription(`Укажи код персонажа.`);
+
     msg.channel.sendEmbed(embed);
-  });
+  }
 };
 
 export default update;

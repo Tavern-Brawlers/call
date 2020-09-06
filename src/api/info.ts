@@ -12,7 +12,7 @@ const fs = require('fs');
 
 const { Pool } = require('pg');
 
-const get = async (cmd: ParsedMessage, msg: Message, bot: Bot): Promise<void> => {
+const info = async (cmd: ParsedMessage, msg: Message, bot: Bot): Promise<void> => {
   const code = cmd.arguments.join(' ');
 
   const pool = new Pool();
@@ -27,11 +27,9 @@ const get = async (cmd: ParsedMessage, msg: Message, bot: Bot): Promise<void> =>
 
           const embed = new RichEmbed()
           .setColor(`#00796B`)
-          .setDescription(`**${character.sheet.profile.name}**\n${character.sheet.modified_date}`);
+          .setDescription(`**${character.sheet.profile.name}**\nPoint Total: ${character.sheet.total_points}\n${character.sheet.modified_date}`);
 
           msg.channel.sendEmbed(embed);
-          msg.channel.sendFile(Buffer.from(JSON.stringify(character.sheet), 'utf8'), `${character.sheet.profile.name}.gcs`)
-
         } else {
           const embed = new RichEmbed()
           .setColor('#E64A19')
@@ -53,4 +51,4 @@ const get = async (cmd: ParsedMessage, msg: Message, bot: Bot): Promise<void> =>
 }
 };
 
-export default get;
+export default info;

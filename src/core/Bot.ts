@@ -10,7 +10,11 @@ import BotCommandMap from './BotCommandMap';
 import { ParsedMessage, parse } from './BotCommandParser';
 
 import get from '../api/get';
+import add from '../api/add';
 import update from '../api/update';
+import info from '../api/info';
+import list from '../api/list';
+import campaign from '../api/campaign';
 
 class YBot implements Bot {
   public client: Client;
@@ -39,7 +43,11 @@ class YBot implements Bot {
       // .on('draw', draw)
           // .on('update', update)
       .on('get', get)
-      .on('update', update);
+      .on('update', update)
+      .on('list', list)
+      .on('add', add)
+      .on('campaign', campaign)
+      .on('info', info);
 
     this.client = new Client()
       .on('message', (msg: Message): void => {
