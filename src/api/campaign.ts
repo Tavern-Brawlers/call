@@ -18,13 +18,13 @@ const campaign = async (cmd: ParsedMessage, msg: Message, bot: Bot): Promise<voi
   const pool = new Pool();
 
   if (code) {
-    pool.query(`SELECT name FROM campaign WHERE uid='${code}'`, (err: any, res: any) => {
+    pool.query(`SELECT name,uid FROM campaign WHERE name='${code}'`, (err: any, res: any) => {
       if (!err) {
-        const campaigns: { name: string; uid: string; campaign: string }[] = res.rows;
+        const campaigns: { name: string; uid: string }[] = res.rows;
 
         if (campaigns.length > 0) {
           const campaign = campaigns[0];
-          pool.query(`SELECT * FROM character WHERE character.campaign='${code}'`, (err: any, res: any) => {
+          pool.query(`SELECT * FROM character WHERE character.campaign='${campaign.uid}'`, (err: any, res: any) => {
             if (!err) {
               const characters: { sheet: Character; uid: string; campaign: string }[] = res.rows;
 
